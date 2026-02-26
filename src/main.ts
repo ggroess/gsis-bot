@@ -47,19 +47,19 @@ function init(): void {
   );
 
   // 2-column layout
-  // Left: connection + plate + run + jog
-  // Right: calibration + config + console
+  // Left: connection + plate + run + calibration
+  // Right: jog + console + config
   const colLeft = el('div', { className: 'col col-left' },
     createConnectionPanel(),
     createPlateView(),
     createRunPanel(),
-    createJogPanel(),
+    createCalibrationPanel(),
   );
 
   const colRight = el('div', { className: 'col col-right' },
-    createCalibrationPanel(),
-    createConfigPanel(),
+    createJogPanel(),
     createConsolePanel(),
+    createConfigPanel(),
   );
 
   const main = el('div', { className: 'main-layout' }, colLeft, colRight);

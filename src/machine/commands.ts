@@ -27,19 +27,17 @@ export async function jog(dx: number, dy: number): Promise<void> {
   await send('G90');
 }
 
-/** Raise the pen (tip out of well) */
+/** Raise the pen / tip out of well (Z-axis move) */
 export async function penUp(): Promise<void> {
-  const { penUpValue, penMovePause } = store.state.runConfig;
-  await send(`M3 S${penUpValue}`);
-  await send(`G4 P${penMovePause}`);
+  const { penUpValue } = store.state.runConfig;
+  await send(`G0 Z${penUpValue}`);
   store.update({ penDown: false });
 }
 
-/** Lower the pen (tip into well) */
+/** Lower the pen / tip into well (Z-axis move) */
 export async function penDown(): Promise<void> {
-  const { penDownValue, penMovePause } = store.state.runConfig;
-  await send(`M3 S${penDownValue}`);
-  await send(`G4 P${penMovePause}`);
+  const { penDownValue } = store.state.runConfig;
+  await send(`G0 Z${penDownValue}`);
   store.update({ penDown: true });
 }
 

@@ -25,8 +25,8 @@ export function createRunPanel(): HTMLElement {
     el('h2', {}, 'Run'),
     el('div', { className: 'run-info' },
       el('div', {}, el('strong', {}, 'Status: '), statusText),
-      el('div', {}, el('strong', {}, 'Current Well: '), currentWellText),
-      el('div', {}, el('strong', {}, 'Dwell Remaining: '), dwellText),
+      el('div', {}, el('strong', {}, 'Well: '), currentWellText),
+      el('div', {}, el('strong', {}, 'Dwell: '), dwellText),
       el('div', {}, el('strong', {}, 'Progress: '), progressText),
     ),
     progressBarContainer,
@@ -49,18 +49,23 @@ export function createRunPanel(): HTMLElement {
 
     const connected = connection === ConnectionState.Connected;
     const hasCalibration = calibration !== null;
+    const isIdle = runState === RunState.Idle || runState === RunState.Complete;
+    const isRunning = runState === RunState.Running;
+    const isPaused = runState === RunState.Paused;
 
-    startBtn.style.display = (runState === RunState.Idle || runState === RunState.Complete) ? '' : 'none';
+    // Start: visible when idle/complete, needs connection + calibration
+    startBtn.style.display = isIdle ? '' : 'none';
     startBtn.disabled = !connected || !hasCalibration;
-    if (!hasCalibration) {
-      startBtn.title = 'Calibrate the plate first';
-    } else {
-      startBtn.title = '';
-    }
+    startBtn.title = !hasCalibration ? 'Calibrate the plate first' : '';
 
-    pauseBtn.style.display = runState === RunState.Running ? '' : 'none';
-    resumeBtn.style.display = runState === RunState.Paused ? '' : 'none';
-    stopBtn.style.display = (runState === RunState.Running || runState === RunState.Paused) ? '' : 'none';
+    // Pause: visible only when running
+    pauseBtn.style.display = isRunning ? '' : 'none';
+
+    // Resume: visible only when paused
+    resumeBtn.style.display = isPaused ? '' : 'none';
+
+    // Stop: visible when running or paused
+    stopBtn.style.display = (isRunning || isPaused) ? '' : 'none';
   });
 
   return panel;

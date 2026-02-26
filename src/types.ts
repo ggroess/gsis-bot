@@ -45,9 +45,8 @@ export interface CalibrationData {
 export interface RunConfig {
   dwellTimeSec: number;
   feedRate: number;       // mm/min for moves between wells
-  penUpValue: number;     // servo PWM value for pen up (e.g. 0)
-  penDownValue: number;   // servo PWM value for pen down (e.g. 1000)
-  penMovePause: number;   // seconds to wait after pen up/down for servo
+  penUpValue: number;     // Z position in mm for pen up (tip raised)
+  penDownValue: number;   // Z position in mm for pen down (tip in well)
 }
 
 /** Connection state */
@@ -97,6 +96,5 @@ export const DEFAULT_RUN_CONFIG: RunConfig = {
   dwellTimeSec: 120,
   feedRate: 3000,
   penUpValue: 0,
-  penDownValue: 1000,
-  penMovePause: 0.5,
+  penDownValue: 7,
 };

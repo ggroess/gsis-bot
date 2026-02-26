@@ -47,14 +47,11 @@ export function createConfigPanel(): HTMLElement {
     numberInput('Feed rate (mm/min)', config.feedRate, 100, 10000, 100, (v) => {
       store.state.runConfig.feedRate = v;
     }),
-    numberInput('Pen up value', config.penUpValue, 0, 1000, 10, (v) => {
+    numberInput('Z up / raised (mm)', config.penUpValue, 0, 50, 0.5, (v) => {
       store.state.runConfig.penUpValue = v;
     }),
-    numberInput('Pen down value', config.penDownValue, 0, 1000, 10, (v) => {
+    numberInput('Z down / in well (mm)', config.penDownValue, 0, 50, 0.5, (v) => {
       store.state.runConfig.penDownValue = v;
-    }),
-    numberInput('Pen move pause (sec)', config.penMovePause, 0, 5, 0.1, (v) => {
-      store.state.runConfig.penMovePause = v;
     }),
   );
 

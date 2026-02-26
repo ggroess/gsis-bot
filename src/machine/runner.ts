@@ -6,8 +6,8 @@
  */
 
 import { store } from '../state.ts';
-import { moveToWell, penUp } from './commands.ts';
-import { wellPosition, traversalOrder } from './plate.ts';
+import { moveToWell, penUp, linearMove } from './commands.ts';
+import { wellPosition, traversalOrder, dripOffPosition } from './plate.ts';
 import { RunState, WellState } from '../types.ts';
 import { clearQueue } from '../serial/grbl.ts';
 
@@ -63,9 +63,12 @@ export async function startRun(): Promise<void> {
       store.update({});
     }
 
-    // Finished — raise pen
+    // Finished — raise pen and move to drip-off position
     if (!abortController.signal.aborted) {
       await penUp();
+      const dripOff = dripOffPosition(calibration);
+      store.log(`[runner] Moving to drip-off position (${dripOff.x.toFixed(1)}, ${dripOff.y.toFixed(1)})`);
+      await linearMove(dripOff, runConfig.feedRate);
       store.update({ runState: RunState.Complete, currentWell: null });
       store.log('[runner] Run complete');
     }
