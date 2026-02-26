@@ -6,10 +6,10 @@
  */
 
 import { store } from '../state.ts';
-import { moveToWell, penUp, linearMove } from './commands.ts';
+import { moveToWell, penUp, penDown, linearMove } from './commands.ts';
 import { wellPosition, traversalOrder, dripOffPosition } from './plate.ts';
 import { RunState, WellState } from '../types.ts';
-import { clearQueue } from '../serial/grbl.ts';
+import { clearQueue, waitForIdle } from '../serial/grbl.ts';
 
 let abortController: AbortController | null = null;
 let pauseResolve: (() => void) | null = null;
@@ -45,17 +45,34 @@ export async function startRun(): Promise<void> {
       store.state.wellStates.set(well.wellId, WellState.Active);
       store.update({ currentWell: well.wellId });
 
-      // Move to the well
       const pos = wellPosition(calibration, well.row, well.col);
-      store.log(`[runner] Moving to ${well.wellId} (${pos.x.toFixed(1)}, ${pos.y.toFixed(1)})`);
-      await moveToWell(pos);
 
+      // 1. Raise tip
+      store.log(`[runner] Raising tip`);
+      await penUp();
       if (abortController.signal.aborted) break;
 
-      // Dwell
+      // 2. Move XY to the well
+      store.log(`[runner] Moving to ${well.wellId} (${pos.x.toFixed(1)}, ${pos.y.toFixed(1)})`);
+      await moveToWell(pos);
+      if (abortController.signal.aborted) break;
+
+      // 3. Lower tip into well
+      store.log(`[runner] Lowering into ${well.wellId}`);
+      await penDown();
+      if (abortController.signal.aborted) break;
+
+      // 3b. Wait for all physical motion to complete before starting dwell timer.
+      // GRBL returns 'ok' when a command enters its buffer, not when the move
+      // finishes. Without this wait, dwell time gets eaten by travel time —
+      // especially on long XY moves like column changes (e.g. F1 → A2).
+      store.log(`[runner] Waiting for motion to complete...`);
+      await waitForIdle();
+      if (abortController.signal.aborted) break;
+
+      // 4. Dwell
       store.log(`[runner] Dwelling in ${well.wellId} for ${runConfig.dwellTimeSec}s`);
       await dwell(runConfig.dwellTimeSec);
-
       if (abortController.signal.aborted) break;
 
       // Mark done
@@ -63,7 +80,7 @@ export async function startRun(): Promise<void> {
       store.update({});
     }
 
-    // Finished — raise pen and move to drip-off position
+    // Finished — raise tip and move to drip-off position
     if (!abortController.signal.aborted) {
       await penUp();
       const dripOff = dripOffPosition(calibration);

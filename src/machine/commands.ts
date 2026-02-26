@@ -27,17 +27,17 @@ export async function jog(dx: number, dy: number): Promise<void> {
   await send('G90');
 }
 
-/** Raise the pen / tip out of well (Z-axis move) */
+/** Raise the tip out of well (slow Z-axis move) */
 export async function penUp(): Promise<void> {
-  const { penUpValue } = store.state.runConfig;
-  await send(`G0 Z${penUpValue}`);
+  const { penUpValue, zFeedRate } = store.state.runConfig;
+  await send(`G1 Z${penUpValue} F${zFeedRate}`);
   store.update({ penDown: false });
 }
 
-/** Lower the pen / tip into well (Z-axis move) */
+/** Lower the tip into well (slow Z-axis move) */
 export async function penDown(): Promise<void> {
-  const { penDownValue } = store.state.runConfig;
-  await send(`G0 Z${penDownValue}`);
+  const { penDownValue, zFeedRate } = store.state.runConfig;
+  await send(`G1 Z${penDownValue} F${zFeedRate}`);
   store.update({ penDown: true });
 }
 
@@ -74,13 +74,8 @@ export async function initMachine(): Promise<void> {
   await setMillimeters();
 }
 
-/**
- * Move to a well position: pen up, move, pen down.
- * Returns after pen is down in the well.
- */
+/** Move XY to a well position (tip must already be raised) */
 export async function moveToWell(pos: Position): Promise<void> {
   const { feedRate } = store.state.runConfig;
-  await penUp();
   await linearMove(pos, feedRate);
-  await penDown();
 }

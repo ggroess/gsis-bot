@@ -122,6 +122,49 @@ export function setStatusHandler(handler: StatusHandler): void {
   onStatus = handler;
 }
 
+/**
+ * Wait until GRBL reports Idle state, meaning all queued motion is
+ * physically complete. Polls with `?` every `intervalMs` milliseconds.
+ * Rejects after `timeoutMs` if Idle is never reached.
+ */
+export function waitForIdle(
+  intervalMs = 200,
+  timeoutMs = 30000,
+): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    const prevHandler = onStatus;
+
+    const cleanup = () => {
+      clearInterval(poll);
+      clearTimeout(timeout);
+      onStatus = prevHandler;
+    };
+
+    const poll = setInterval(() => {
+      requestStatus();
+    }, intervalMs);
+
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error('waitForIdle timed out'));
+    }, timeoutMs);
+
+    // Intercept status reports to check for Idle
+    onStatus = (status: GrblStatus) => {
+      // Still forward to previous handler (UI position updates, etc.)
+      prevHandler?.(status);
+
+      if (status.state === 'Idle') {
+        cleanup();
+        resolve();
+      }
+    };
+
+    // Fire an immediate status request so we don't wait a full interval
+    requestStatus();
+  });
+}
+
 /** Initialize the GRBL line handler */
 export function initGrbl(): void {
   setLineHandler(handleLine);

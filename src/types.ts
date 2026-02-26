@@ -44,7 +44,8 @@ export interface CalibrationData {
 /** Run configuration */
 export interface RunConfig {
   dwellTimeSec: number;
-  feedRate: number;       // mm/min for moves between wells
+  feedRate: number;       // mm/min for XY moves between wells
+  zFeedRate: number;      // mm/min for Z moves (slow, gentle dip)
   penUpValue: number;     // Z position in mm for pen up (tip raised)
   penDownValue: number;   // Z position in mm for pen down (tip in well)
 }
@@ -95,6 +96,7 @@ export interface AppState {
 export const DEFAULT_RUN_CONFIG: RunConfig = {
   dwellTimeSec: 120,
   feedRate: 3000,
+  zFeedRate: 300,
   penUpValue: 0,
   penDownValue: 7,
 };

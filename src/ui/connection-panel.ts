@@ -1,5 +1,6 @@
 /**
- * Connection panel: compact horizontal bar with status, position, and buttons.
+ * Connection controls: status dot, position readout, connect/disconnect buttons.
+ * Designed to sit inline inside the app header bar.
  */
 
 import { store } from '../state.ts';
@@ -30,8 +31,8 @@ export function createConnectionPanel(): HTMLElement {
   }, 'btn-danger btn-sm');
 
   const panel = el(
-    'section',
-    { className: 'panel connection-panel' },
+    'div',
+    { className: 'connection-controls' },
     statusDot,
     statusText,
     posText,

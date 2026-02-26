@@ -44,8 +44,11 @@ export function createConfigPanel(): HTMLElement {
     numberInput('Dwell time (sec)', config.dwellTimeSec, 1, 3600, 1, (v) => {
       store.state.runConfig.dwellTimeSec = v;
     }),
-    numberInput('Feed rate (mm/min)', config.feedRate, 100, 10000, 100, (v) => {
+    numberInput('XY speed (mm/min)', config.feedRate, 100, 10000, 100, (v) => {
       store.state.runConfig.feedRate = v;
+    }),
+    numberInput('Z speed (mm/min)', config.zFeedRate, 10, 2000, 10, (v) => {
+      store.state.runConfig.zFeedRate = v;
     }),
     numberInput('Z up / raised (mm)', config.penUpValue, 0, 50, 0.5, (v) => {
       store.state.runConfig.penUpValue = v;

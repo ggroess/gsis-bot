@@ -6,6 +6,7 @@ import { store } from '../state.ts';
 import { CalibrationStep, ConnectionState } from '../types.ts';
 import type { CalibrationData, Position } from '../types.ts';
 import { saveCalibration } from '../storage.ts';
+import { penUp, linearMove } from '../machine/commands.ts';
 import { el, btn } from './helpers.ts';
 
 const STEPS = [
@@ -28,6 +29,35 @@ export function createCalibrationPanel(): HTMLElement {
   function fmtPos(p: Position | undefined): string {
     return p ? `(${p.x.toFixed(1)}, ${p.y.toFixed(1)})` : '---';
   }
+
+  /** Move to a calibrated corner position (raise tip first, then move XY) */
+  async function goToPosition(pos: Position, label: string): Promise<void> {
+    try {
+      store.log(`[cal] Raising tip and moving to ${label}...`);
+      await penUp();
+      const { feedRate } = store.state.runConfig;
+      await linearMove(pos, feedRate);
+      store.log(`[cal] Arrived at ${label}`);
+    } catch (err) {
+      store.log(`[cal] Move to ${label} failed: ${err}`);
+    }
+  }
+
+  // "Go To" buttons for each corner
+  const goA1Btn = btn('Go To', () => {
+    const cal = store.state.calibration;
+    if (cal) goToPosition(cal.a1, 'A1');
+  }, 'btn-secondary btn-sm');
+
+  const goA8Btn = btn('Go To', () => {
+    const cal = store.state.calibration;
+    if (cal) goToPosition(cal.a8, 'A8');
+  }, 'btn-secondary btn-sm');
+
+  const goF1Btn = btn('Go To', () => {
+    const cal = store.state.calibration;
+    if (cal) goToPosition(cal.f1, 'F1');
+  }, 'btn-secondary btn-sm');
 
   const captureBtn = btn('Capture Position', () => {
     if (stepIndex < 0 || stepIndex >= STEPS.length) return;
@@ -68,9 +98,9 @@ export function createCalibrationPanel(): HTMLElement {
   captureBtn.disabled = true;
 
   const posTable = el('div', { className: 'cal-positions' },
-    el('div', {}, el('strong', {}, 'A1: '), a1Text),
-    el('div', {}, el('strong', {}, 'A8: '), a8Text),
-    el('div', {}, el('strong', {}, 'F1: '), f1Text),
+    el('div', { className: 'cal-row' }, el('strong', {}, 'A1: '), a1Text, goA1Btn),
+    el('div', { className: 'cal-row' }, el('strong', {}, 'A8: '), a8Text, goA8Btn),
+    el('div', { className: 'cal-row' }, el('strong', {}, 'F1: '), f1Text, goF1Btn),
   );
 
   const panel = el('section', { className: 'panel calibration-panel' },
@@ -89,12 +119,25 @@ export function createCalibrationPanel(): HTMLElement {
     instructionText.textContent = 'Calibration loaded from saved data.';
   }
 
+  /** Update Go To button disabled states */
+  function updateGoButtons(): void {
+    const connected = store.state.connection === ConnectionState.Connected;
+    const cal = store.state.calibration;
+    goA1Btn.disabled = !connected || !cal;
+    goA8Btn.disabled = !connected || !cal;
+    goF1Btn.disabled = !connected || !cal;
+  }
+
   // Disable when not connected
   store.subscribe(() => {
     const disabled = store.state.connection !== ConnectionState.Connected;
     startBtn.disabled = disabled;
     if (disabled) captureBtn.disabled = true;
+    updateGoButtons();
   });
+
+  // Initial state for Go buttons
+  updateGoButtons();
 
   return panel;
 }

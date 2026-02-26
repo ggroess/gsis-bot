@@ -44,13 +44,13 @@ function init(): void {
   const header = el('header', { className: 'app-header' },
     ascii,
     el('span', { className: 'app-subtitle' }, '48-Well Plate Controller'),
+    createConnectionPanel(),
   );
 
   // 2-column layout
-  // Left: connection + plate + run + calibration
+  // Left: plate + run + calibration
   // Right: jog + console + config
   const colLeft = el('div', { className: 'col col-left' },
-    createConnectionPanel(),
     createPlateView(),
     createRunPanel(),
     createCalibrationPanel(),
